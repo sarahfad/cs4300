@@ -1,4 +1,6 @@
 def greeting():
-    return print("Hello, World!")
+    """ Function returns a greeting """
+    return "Hello, World!"
 
-greeting()
+if __name__ == "__main__":
+    print(greeting())
