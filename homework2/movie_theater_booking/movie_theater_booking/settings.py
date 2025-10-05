@@ -84,19 +84,12 @@ WSGI_APPLICATION = 'movie_theater_booking.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-if os.environ.get("RENDER"):
-    # Running on Render → use PostgreSQL
-    DATABASES = {
-        "default": dj_database_url.config(conn_max_age=600)
-    }
-else:
-    # Running locally → use SQLite
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": BASE_DIR / "db.sqlite3",
-        }
-    }
+DATABASES = {
+    'default': dj_database_url.config(
+        default='postgresql://movie_theater_booking_7c6x_user:EssKYIZJNObF7nme3MZfWS3DtdXqabqg@dpg-d3hcuhili9vc73e1jeq0-a.oregon-postgres.render.com/movie_theater_booking_7c6x',
+        conn_max_age=600
+    )
+}
 
 
 

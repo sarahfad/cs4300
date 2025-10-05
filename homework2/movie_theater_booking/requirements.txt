@@ -7,7 +7,6 @@ dj-database-url==3.0.1
 Django==4.2.11
 djangorestframework==3.16.1
 gunicorn==23.0.0
-gyp==0.1
 h11==0.16.0
 idna==3.10
 iniconfig==2.1.0
