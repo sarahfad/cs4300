@@ -1,0 +1,30 @@
+{% extends "bookings/base.html" %}
+{% block title %}Booking History{% endblock %}
+{% block content %}
+<h2 class="mb-3">Your Booking History</h2>
+
+<table class="table table-hover align-middle shadow-sm">
+  <thead class="table-light">
+    <tr>
+      <th>Booked</th>
+      <th>Watch Date</th>
+      <th>Movie</th>
+      <th>Seat</th>
+      <th>User</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for b in bookings %}
+      <tr>
+        <td>{{ b.booking_date|date:"Y-m-d H:i" }}</td>
+        <td>{{ b.show_date }}</td>
+        <td>{{ b.movie.title }}</td>
+        <td>{{ b.seat.seat_number }}</td>
+        <td>{{ b.user.username }}</td>
+      </tr>
+    {% empty %}
+      <tr><td>No bookings yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

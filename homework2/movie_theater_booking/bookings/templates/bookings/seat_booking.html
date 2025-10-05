@@ -1,0 +1,72 @@
+<!--Had ChatGPT help with some of the front-end to make it look better-->
+
+{% extends "bookings/base.html" %}
+{% block title %}Book Seat{% endblock %}
+{% block content %}
+<div class="row g-4">
+  <div class="col-12 col-lg-7">
+    <div class="card">
+      <div class="card-body">
+        <h2 class="h4 mb-1">{{ movie.title }}</h2>
+        <div class="text-muted mb-3">
+          <i class="bi bi-calendar2-week"></i> Release: {{ movie.release_date }}
+          <span class="mx-2">•</span>
+          <i class="bi bi-stopwatch"></i> {{ movie.duration }} min
+        </div>
+
+        {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+
+        <form method="post" class="row g-3">
+          {% csrf_token %}
+          <div class="col-md-6">
+            <label for="seat_id" class="form-label">Seat</label>
+            <select id="seat_id" name="seat_id" class="form-select" required>
+              {% for seat in seats %}
+                <option value="{{ seat.id }}">{{ seat.seat_number }}</option>
+              {% endfor %}
+            </select>
+            <div class="form-text">Only available seats are listed.</div>
+          </div>
+
+          <div class="col-md-6">
+            <label for="show_date" class="form-label">Watch Date</label>
+            <input id="show_date" name="show_date" type="date" class="form-control" required value="{{ today }}">
+          </div>
+
+          <div class="col-md-6">
+            <label for="username" class="form-label">Username</label>
+            <input id="username" name="username" class="form-control" placeholder="User" />
+          </div>
+
+          <div class="col-12">
+            <button class="btn btn-success w-100" type="submit">
+              <i class="bi bi-check2-circle"></i> Confirm Booking
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <style>
+    .theater-viz { background:#f8f9fa; border-radius:1rem; padding:1rem; box-shadow: inset 0 0 0 1px rgba(0,0,0,.04); }
+    .theater-screen { background:#e9ecef; color:#495057; text-align:center; padding:.5rem; border-radius:.75rem; font-weight:700; letter-spacing:.08em; margin-bottom:1rem; }
+    .seat-grid { display:grid; grid-template-columns:repeat(10, 1fr); gap:.5rem; }
+    .seat-pill { text-align:center; background:#e9ecef; }
+
+  </style>
+
+  <div class="theater-viz">
+    <div class="theater-screen">SCREEN</div>
+
+    {# Rows A and B; adjust letters if you have more rows #}
+    {% for row in "AB" %}
+      <div class="seat-grid">
+        {% for _ in "0123456789"|make_list %}
+          <div class="seat-pill">{{ row }}{{ forloop.counter }}</div>
+        {% endfor %}
+      </div>
+    {% endfor %}
+  </div>
+  </div>
+</div>
+{% endblock %}

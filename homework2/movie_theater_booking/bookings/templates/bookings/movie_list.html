@@ -1,0 +1,40 @@
+<!--Had ChatGPT help with some of the front-end to make it look better-->
+
+{% extends "bookings/base.html" %}
+{% block title %}Movies{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-end mb-3">
+  <h2 class="mb-0">Now Showing</h2>
+  <span class="text-muted">{{ movies|length }} title{{ movies|length|pluralize }}</span>
+</div>
+
+{% if movies %}
+  <div class="row g-4">
+    {% for movie in movies %}
+      <div class="col-12 col-md-6 col-lg-4">
+        <div class="card h-100">
+          <div class="card-body d-flex flex-column">
+            <div class="d-flex justify-content-between align-items-start">
+              <h5 class="card-title mb-1">{{ movie.title }}</h5>
+              <span class="badge text-bg-primary">
+                <i class="bi bi-stopwatch"></i> {{ movie.duration }}m
+              </span>
+            </div>
+            <div class="text-muted mb-2">
+              <i class="bi bi-calendar2-week"></i> Release: {{ movie.release_date }}
+            </div>
+            <p class="card-text flex-grow-1">{{ movie.description|truncatechars:140 }}</p>
+            <a href="{% url 'book_seat' movie.id %}" class="btn btn-success mt-2 w-100">
+              <i class="bi bi-ticket-perforated"></i> Book Now
+            </a>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="alert alert-warning shadow-sm">
+    No movies yet. Add some in <a href="/admin/" class="alert-link">Admin</a>.
+  </div>
+{% endif %}
+{% endblock %}
