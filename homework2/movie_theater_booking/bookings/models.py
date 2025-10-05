@@ -15,7 +15,7 @@ class Movie(models.Model):
 
 # Seat: seat number, booking status.
 class Seat(models.Model):
-    seat_number = models.CharField(max_length=10, unique=True)  # allow A10, B12, etc.
+    seat_number = models.CharField(max_length=10, unique=True)  # allow A10, B10, etc.
     is_booked = models.BooleanField(default=False)               # renamed for clarity
 
     def __str__(self):

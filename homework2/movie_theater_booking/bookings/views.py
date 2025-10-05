@@ -13,28 +13,31 @@ from .serializers import MovieSerializer, SeatSerializer, BookingSerializer
 
 from datetime import date
 
-# ---------- Shared pagination ----------
+# Pagination used by API lists
 class SmallResultsSetPagination(PageNumberPagination):
     page_size = 25
     page_size_query_param = 'page_size'
     max_page_size = 200
 
 
-# ---------- API (DRF) ----------
+# API (DRF) Layer
 
 class MovieViewSet(viewsets.ModelViewSet):
     """
     CRUD for movies.
-    Extras:
-      - ?q=<text> search in title/description
+    Extra:
+    add ?q=searchtext to filter by title or description
     """
     serializer_class = MovieSerializer
     pagination_class = SmallResultsSetPagination
 
     def get_queryset(self):
+        #start with all movies, A to Z by title
         qs = Movie.objects.all().order_by('title')
+        #read an optional query param named q
         q = self.request.query_params.get('q')
         if q:
+            #case-insensitive match in title or description
             qs = qs.filter(Q(title__icontains=q) | Q(description__icontains=q))
         return qs
 
@@ -43,10 +46,10 @@ class SeatViewSet(viewsets.ModelViewSet):
     """
     CRUD for seats.
     Extras:
-      - ?available=true to filter only unbooked seats
-      - GET  /api/seats/available/   -> list unbooked seats
-      - POST /api/seats/{id}/book/   -> book specific seat (body: {"user":<id>, "movie":<id>})
-      - POST /api/seats/{id}/unbook/ -> free a seat (utility)
+      - ?available=true to show only unbooked seats
+      - GET  /api/seats/available/    list unbooked seats
+      - POST /api/seats/{id}/book/   book specific seat (body: {"user":<id>, "movie":<id>})
+      - POST /api/seats/{id}/unbook/  free a seat (helper)
     """
     serializer_class = SeatSerializer
     pagination_class = SmallResultsSetPagination
@@ -61,6 +64,10 @@ class SeatViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def available(self, request):
+        """
+        Shortcut endpoint: /api/seats/available
+        returns only available seats
+        """
         qs = Seat.objects.filter(is_booked=False).order_by('seat_number')
         page = self.paginate_queryset(qs)
         if page is not None:
@@ -72,7 +79,7 @@ class SeatViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def book(self, request, pk=None):
         """
-        Concurrency-safe booking using a DB transaction.
+        Book a single seat by its id in the url
         Body: {"user": <id>, "movie": <id>}
         """
         seat = self.get_object()
@@ -104,7 +111,7 @@ class SeatViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def unbook(self, request, pk=None):
         """
-        Utility to free a seat (deletes any associated booking).
+        Helper to free a seat. Deletes any booking for that seat
         """
         with transaction.atomic():
             seat = get_object_or_404(Seat.objects.select_for_update(), pk=pk)
@@ -118,19 +125,24 @@ class SeatViewSet(viewsets.ModelViewSet):
 
 class BookingViewSet(viewsets.ModelViewSet):
     """
-    CRUD for bookings.
+    Full CRUD for bookings.
     Extras:
-      - ?user=<id> or ?username=<name> to filter
-      - GET  /api/bookings/mine/           -> bookings for current user or ?username=
-      - POST /api/bookings/{id}/cancel/    -> cancel booking & free seat
+      - ?user=<id> or ?username=<name> to filter bookings by userid
+      - GET  /api/bookings/mine/       bookings for current user or ?username=
+      - POST /api/bookings/{id}/cancel/    cancel booking & free seat
     """
     serializer_class = BookingSerializer
     pagination_class = SmallResultsSetPagination
 
     def get_queryset(self):
+        """
+        Prefetch related objects to avoid extra SQL queries in lists
+        """
         qs = (Booking.objects
               .select_related('movie', 'seat', 'user')
-              .order_by('-booking_date'))
+              .order_by('-booking_date')) #newest first
+
+        # Filters from query params
         user_id = self.request.query_params.get('user')
         username = self.request.query_params.get('username')
         if user_id:
@@ -141,6 +153,9 @@ class BookingViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def mine(self, request):
+        """
+        Returns booking for use if authenticated
+        """
         if request.user.is_authenticated:
             qs = (Booking.objects.filter(user=request.user)
                   .select_related('movie', 'seat')
@@ -163,6 +178,7 @@ class BookingViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def cancel(self, request, pk=None):
+        """Cancel a booking and free the seat"""
         with transaction.atomic():
             booking = get_object_or_404(Booking.objects.select_related('seat'), pk=pk)
             seat = booking.seat
@@ -175,11 +191,19 @@ class BookingViewSet(viewsets.ModelViewSet):
 # ---------- HTML views (Templates) ----------
 
 def movie_list_view(request):
+    """
+    Show all movies on homepage with "Book" buttons
+    """
     movies = Movie.objects.all().order_by('title')
     return render(request, 'bookings/movie_list.html', {'movies': movies})
 
 
 def seat_booking_view(request, movie_id):
+    """
+    Page to book a seat for a specific movie
+    GET: Show form
+    POST: create a booking and mark the seat as booked
+    """
     movie = get_object_or_404(Movie, pk=movie_id)
     seats = Seat.objects.filter(is_booked=False).order_by('seat_number')
     # provide default date for the picker
@@ -212,6 +236,9 @@ def seat_booking_view(request, movie_id):
 
 
 def booking_history_view(request):
+    """
+    Page that shows all bookings
+    """
     bookings = Booking.objects.select_related('movie', 'seat', 'user').order_by('-booking_date')
     # Always return a response
     return render(request, 'bookings/booking_history.html', {'bookings': bookings})

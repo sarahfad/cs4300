@@ -2,16 +2,27 @@ from rest_framework import serializers
 from .models import Movie, Seat, Booking
 
 class MovieSerializer(serializers.ModelSerializer):
+    """
+    Basic Serializer for Movie
+    """
     class Meta:
         model = Movie
         fields = '__all__'
 
 class SeatSerializer(serializers.ModelSerializer):
+    """
+    Basic Serializer for Seat
+    """
     class Meta:
         model = Seat
         fields = '__all__'
 
 class BookingSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Booking
+    Validates foreign keys
+    Create() marks seat.isbooked = true so it disappears from available seats
+    """
     class Meta:
         model = Booking
         fields = '__all__'

@@ -77,3 +77,4 @@ python manage.py test
 AI assistance (ChatGPT) was used to:
  - Debug and resolve Django and Render errors
  - Enhance front-end HTML/CSS
+ - Help with the Unit tests and Integration testing
